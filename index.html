@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Analytics Dashboard (2007-2024)</title>
+
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            /* Core Theme Colors */
+            --bg-body: #f1f5f9;
+            --bg-sidebar: #0f172a;
+            --bg-card: #ffffff;
+
+            /* Text Colors */
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --text-light: #f8fafc;
+
+            /* Accent Colors */
+            --primary: #10b981;
+            /* Emerald */
+            --secondary: #f59e0b;
+            /* Amber */
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+
+            /* Borders & Shadows */
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+
+            /* Layout */
+            --drawer-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ----- Sidebar ----- */
+        .sidebar {
+            width: var(--drawer-width);
+            background-color: var(--bg-sidebar);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-brand {
+            padding: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-brand .material-icons {
+            color: var(--primary);
+            font-size: 28px;
+        }
+
+        .sidebar-menu {
+            padding: 1.5rem 0;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar-menu a {
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-light);
+            border-left: 4px solid var(--primary);
+        }
+
+        .sidebar-menu a .material-icons {
+            font-size: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            font-size: 0.8rem;
+            color: #64748b;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            line-height: 1.6;
+        }
+
+        /* ----- Main Dashboard Area ----- */
+        .main-wrapper {
+            flex-grow: 1;
+            margin-left: var(--drawer-width);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: calc(100% - var(--drawer-width));
+        }
+
+        /* Top Bar */
+        .top-header {
+            height: 70px;
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .profile-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+        }
+
+        /* Content Padding */
+        .dashboard-content {
+            padding: 2rem;
+            flex-grow: 1;
+        }
+
+        /* ----- KPI Metrics Grid ----- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Accent Lines for Cards */
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--primary);
+        }
+
+        .metric-card.m-amber::before {
+            background-color: var(--secondary);
+        }
+
+        .metric-card.m-blue::before {
+            background-color: var(--accent-blue);
+        }
+
+        .metric-card.m-purple::before {
+            background-color: var(--accent-purple);
+        }
+
+        .m-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .m-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.1;
+        }
+
+        /* ----- Charts Grid ----- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .chart-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Grid Spans */
+        .span-2 {
+            grid-column: span 2;
+        }
+
+        .span-3 {
+            grid-column: span 3;
+        }
+
+        .card-header {
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .material-icons {
+            font-size: 18px;
+            color: var(--text-muted);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            flex-grow: 1;
+        }
+
+        .chart-wrapper.tall {
+            height: 330px;
+        }
+
+        .card-insight {
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            background-color: #f8fafc;
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+
+        .card-insight span {
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-right: 4px;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1200px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .span-3 {
+                grid-column: span 2;
+            }
+
+            .charts-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .span-2,
+            .span-3 {
+                grid-column: span 1;
+            }
+
+            .top-header {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="material-icons">sports_cricket</span> IPL Analytics
+        </div>
+        <div class="sidebar-menu">
+            <a href="#" class="active"><span class="material-icons">dashboard</span> Overview Dashboard</a>
+            <a href="#teams"><span class="material-icons">military_tech</span> Team Performance</a>
+            <a href="#players"><span class="material-icons">groups</span> Player Stats</a>
+            <a href="#venues"><span class="material-icons">stadium</span> Venue Analysis</a>
+        </div>
+        <div class="sidebar-footer">
+            <strong>Built by Dhruvi Raval</strong><br>
+            Data Provided: Kaggle<br>
+            Python, Pandas, JS, Chart.js
+        </div>
+    </aside>
+
+    <!-- Main ContentWrapper -->
+    <main class="main-wrapper">
+
+        <!-- Top Navigation Bar -->
+        <header class="top-header">
+            <div class="header-title">Exploratory Data Dashboard</div>
+            <div class="header-controls">
+                <div class="profile-badge">
+                    <span class="material-icons" style="color: var(--primary);">account_circle</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Canvas -->
+        <div class="dashboard-content">
+
+            <!-- KPI Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="m-title">Total Matches</div>
+                    <div class="m-value">1,090</div>
+                </div>
+                <div class="metric-card m-amber">
+                    <div class="m-title">Total Seasons</div>
+                    <div class="m-value">17</div>
+                </div>
+                <div class="metric-card m-blue">
+                    <div class="m-title">Total Teams</div>
+                    <div class="m-value">18</div>
+                </div>
+                <div class="metric-card m-purple">
+                    <div class="m-title">Total Deliveries</div>
+                    <div class="m-value">260,920</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Charts Grid -->
+            <div class="charts-grid">
+
+                <!-- 1. All-Time Team Wins (Span 2) -->
+                <div class="chart-card span-2" id="teams">
+                    <div class="card-header">
+                        <div class="card-title"><span class="material-icons">leaderboard</span> All-Time Team Wins</div>
+                    </div>
+                    <div class="chart-wrapper tall"><canvas id="teamWinsChart"></canvas></div>
+                    <div class="card-insight">
+                        <span>Insight</span> Mumbai Indians and Chennai Super Kings have absolute dominance, firmly
+                        establishing themselves as the most successful franchises.
+                    </div>
+                </div>
+
+                <!-- 2. Toss Decision (Span 1) -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <div class="card-title"><span class="material-icons">flaky</span> Toss Decision Preference</div>
+                    </div>
+                    <div class="chart-wrapper tall"><canvas id="tossDecisionChart"></canvas></div>
+                    <div class="card-insight">
+                        <span>Insight</span> Captains overwhelmingly elect to field first (64.2%) due to subcontinental
+                        dew factors making chasing easier under lights.
+                    </div>
+                </div>
+
+                <!-- 3. Season Average (Span 2) -->
+                <div class="chart-card span-2">
+                    <div class="card-header">
+                        <div class="card-title"><span class="material-icons">timeline</span> Avg 1st Innings Score (By
+                            Season)</div>
+                    </div>
+                    <div class="chart-wrapper"><canvas id="seasonAvgChart"></canvas></div>
+                    <div class="card-insight">
+                        <span>Insight</span> Run-scoring has surged dramatically, with 2023 and 2024 breaking historical
+                        records largely driven by the 'Impact Player' rule.
+                    </div>
+                </div>
+
+                <!-- 4. Toss Result (Span 1) -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <div class="card-title"><span class="material-icons">pie_chart</span> Match Result for Toss
+                            Winners</div>
+                    </div>
+                    <div class="chart-wrapper"><canvas id="tossResultChart"></canvas></div>
+                    <div class="card-insight">
+                        <span>Insight</span> Despite heavy preference for fielding first, match outcomes for the toss
+                        winner inexplicably remain a balanced coin-flip (~50%).
+                    </div>
+                </div>
+
+                <!-- 5. Top Run Scorers (Span 1) -->
+                <div class="chart-card" id="players">
+                    <div class="card-header">
+                        <div class="card-title"><span class="material-icons">sports_score</span> Top 10 Run Scorers
+                        </div>
+                    </div>
+                    <div class="chart-wrapper"><canvas id="runScorersChart"></canvas></div>
+                    <div class="card-insight">
+                        <span>Insight</span> Virat Kohli stands completely isolated at the top with an incredible 8,000+
+                        runs, unmatched by any batter.
+                    </div>
+                </div>
+
+                <!-- 6. Top Wicket Takers (Span 1) -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <div class="card-title"><span class="material-icons">adjust</span> Top 10 Wicket Takers</div>
+                    </div>
+                    <div class="chart-wrapper"><canvas id="wicketTakersChart"></canvas></div>
+                    <div class="card-insight">
+                        <span>Insight</span> Wrist-spinners dominate the bowling charts alongside cunning death bowlers,
+                        led by Yuzvendra Chahal.
+                    </div>
+                </div>
+
+                <!-- 7. Top Six Hitters (Span 1) -->
+                <div class="chart-card">
+                    <div class="card-header">
+                        <div class="card-title"><span class="material-icons">rocket_launch</span> Top 10 Six Hitters
+                        </div>
+                    </div>
+                    <div class="chart-wrapper"><canvas id="sixesChart"></canvas></div>
+                    <div class="card-insight">
+                        <span>Insight</span> Chris Gayle remains the undisputed 'Universe Boss' with 357 maximums,
+                        standing head and shoulders above everyone else.
+                    </div>
+                </div>
+
+                <!-- 8. Venues (Span 3) -->
+                <div class="chart-card span-3" id="venues">
+                    <div class="card-header">
+                        <div class="card-title"><span class="material-icons">stadium</span> Highest Scoring Venues (Avg
+                            1st Innings)</div>
+                    </div>
+                    <div class="chart-wrapper"><canvas id="venuesChart"></canvas></div>
+                    <div class="card-insight">
+                        <span>Insight</span> Visakhapatnam averages a phenomenal 231.5 in the first innings, acting as
+                        an absolute paradise for explosive batting compared to traditional grounds.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Chart Configuration Script -->
+    <script>
+        // Global defaults for clean dashboard aesthetic
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        // Dashboard Palette
+        const colors = {
+            emerald: 'rgba(16, 185, 129, 0.85)',
+            emeraldBorder: '#10b981',
+            amber: 'rgba(245, 158, 11, 0.85)',
+            amberBorder: '#f59e0b',
+            blue: 'rgba(59, 130, 246, 0.85)',
+            blueBorder: '#3b82f6',
+            purple: 'rgba(139, 92, 246, 0.85)',
+            purpleBorder: '#8b5cf6',
+            rose: 'rgba(244, 63, 94, 0.85)',
+            roseBorder: '#f43f5e',
+            gridLine: '#f1f5f9'
+        };
+
+        // Shared Configuration
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#0f172a',
+                    titleColor: '#f8fafc',
+                    bodyColor: '#cbd5e1',
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: false
+                }
+            }
+        };
+
+        const barOptions = {
+            ...commonOptions,
+            scales: {
+                y: { grid: { color: colors.gridLine } },
+                x: { grid: { display: false } }
+            }
+        };
+
+        const horizontalBarOptions = {
+            ...commonOptions,
+            indexAxis: 'y',
+            scales: {
+                x: { grid: { color: colors.gridLine } },
+                y: { grid: { display: false } }
+            }
+        };
+
+        // 1. Team Wins
+        new Chart(document.getElementById('teamWinsChart'), {
+            type: 'bar',
+            data: {
+                labels: ['MI', 'CSK', 'KKR', 'RCB', 'RR', 'KXIP', 'SRH', 'DD', 'DC', 'DEC', 'GT', 'LSG', 'PBKS', 'GL', 'PW', 'RPS', 'RCBn', 'KTK', 'RPSg'],
+                datasets: [{
+                    label: 'Wins',
+                    data: [143, 138, 131, 116, 113, 88, 87, 67, 49, 29, 28, 25, 25, 12, 11, 9, 6, 6, 5],
+                    backgroundColor: colors.emerald,
+                    borderColor: colors.emeraldBorder,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: barOptions
+        });
+
+        // 2. Toss Decision
+        new Chart(document.getElementById('tossDecisionChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Field First', 'Bat First'],
+                datasets: [{
+                    data: [64.2, 35.8],
+                    backgroundColor: [colors.blue, colors.amber],
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    ...commonOptions.plugins,
+                    legend: { position: 'bottom', labels: { padding: 20, font: { weight: 500 } } }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // 3. Toss Result
+        new Chart(document.getElementById('tossResultChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Won Match', 'Lost Match'],
+                datasets: [{
+                    data: [50.8, 49.2],
+                    backgroundColor: [colors.purple, '#e2e8f0'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    ...commonOptions.plugins,
+                    legend: { position: 'bottom', labels: { padding: 20, font: { weight: 500 } } }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // 4. Run Scorers
+        new Chart(document.getElementById('runScorersChart'), {
+            type: 'bar',
+            data: {
+                labels: ['V Kohli', 'S Dhawan', 'RG Sharma', 'DA Warner', 'SK Raina', 'MS Dhoni', 'AB de Villiers', 'CH Gayle', 'RV Uthappa', 'KD Karthik'],
+                datasets: [{
+                    label: 'Runs',
+                    data: [8014, 6769, 6630, 6567, 5536, 5243, 5181, 4997, 4954, 4843],
+                    backgroundColor: colors.amber,
+                    borderColor: colors.amberBorder,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: horizontalBarOptions
+        });
+
+        // 5. Wicket Takers
+        new Chart(document.getElementById('wicketTakersChart'), {
+            type: 'bar',
+            data: {
+                labels: ['YS Chahal', 'DJ Bravo', 'PP Chawla', 'SP Narine', 'R Ashwin', 'B Kumar', 'SL Malinga', 'A Mishra', 'JJ Bumrah', 'RA Jadeja'],
+                datasets: [{
+                    label: 'Wickets',
+                    data: [213, 207, 201, 200, 198, 195, 188, 183, 182, 169],
+                    backgroundColor: colors.blue,
+                    borderColor: colors.blueBorder,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: horizontalBarOptions
+        });
+
+        // 6. Six Hitters
+        new Chart(document.getElementById('sixesChart'), {
+            type: 'bar',
+            data: {
+                labels: ['CH Gayle', 'RG Sharma', 'V Kohli', 'AB de Villiers', 'MS Dhoni', 'DA Warner', 'KA Pollard', 'AD Russell', 'SV Samson', 'SK Raina'],
+                datasets: [{
+                    label: 'Total Sixes',
+                    data: [357, 281, 274, 255, 253, 239, 226, 209, 206, 205],
+                    backgroundColor: colors.rose,
+                    borderColor: colors.roseBorder,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: horizontalBarOptions
+        });
+
+        // 7. Venues
+        new Chart(document.getElementById('venuesChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Visakhapatnam', 'Dharamsala', 'Delhi', 'Mohali', 'Bengaluru', 'Kolkata', 'Hyderabad', 'Chinnaswamy', 'Brabourne', 'Guwahati'],
+                datasets: [{
+                    label: 'Avg Score',
+                    data: [231.5, 202.0, 199.1, 197.8, 196.2, 195.6, 188.4, 181.9, 180.4, 180.0],
+                    backgroundColor: colors.purple,
+                    borderColor: colors.purpleBorder,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                ...horizontalBarOptions,
+                scales: {
+                    x: { min: 150, grid: { color: colors.gridLine } },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 8. Season Average Line
+        new Chart(document.getElementById('seasonAvgChart'), {
+            type: 'line',
+            data: {
+                labels: ['2007/08', '2009', '2009/10', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020/21', '2021', '2022', '2023', '2024'],
+                datasets: [{
+                    label: 'Avg 1st Innings',
+                    data: [161.0, 150.3, 164.8, 153.7, 157.5, 155.9, 163.1, 165.3, 162.6, 165.8, 172.5, 168.5, 169.5, 159.3, 171.1, 183.5, 189.6],
+                    borderColor: colors.emeraldBorder,
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: colors.emeraldBorder,
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    y: { min: 140, grid: { color: colors.gridLine } },
+                    x: { grid: { color: colors.gridLine } }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
