@@ -2,7 +2,7 @@
 
 Welcome to my IPL Analytics project! I am a 2nd-year Computer Engineering student, and this project began as an Exploratory Data Analysis (EDA) assignment using Python and Pandas. To make the insights accessible and engaging, I transformed my findings into this fully responsive, single-page web dashboard.
 
-**🔗 [View the Live Dashboard Here](https://dhruvi3009.github.com/ipl-dashboard-eda/index.html/)** 
+**🔗 [View the Live Dashboard Here](https://dhruvi3009.github.io/ipl-dashboard-eda)** 
 
 ## 🛠️ Tech Stack & Tools Used
 - **Data Engineering:** Python, Pandas (Jupyter Notebooks)
